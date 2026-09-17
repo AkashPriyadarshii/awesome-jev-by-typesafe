@@ -2816,4 +2816,4 @@ Thanks to the high-tier source creators represented here: [@ai_for_success](http
 
 If you have more interesting usage cases to share, feel free to open an issue or pull request and help expand the MuAPI usecase library.
 
-[![Star History Chart](https://api.star-history.com/svg?repos=Anil-matcha/awesome-claude-fable-5&type=Date)](https://www.star-history.com/#Anil-matcha/awesome-claude-fable-5&Date)
+[![Star History Chart](https://star-history.dera.page/svg?repos=Anil-matcha/awesome-claude-fable-5&type=Date)](https://star-history.dera.page/#Anil-matcha/awesome-claude-fable-5&Date)
