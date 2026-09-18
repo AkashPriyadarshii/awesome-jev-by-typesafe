@@ -505,6 +505,252 @@ Use one Choice to identify whether a turn needs a skill or tool and Nouls to det
 
 Source: [Agent skill](https://docs.typesafe.ai/agent-skill) and [skill suggestion cookbook](https://docs.typesafe.ai/cookbooks/skill_suggestion).
 
+## 13. Recent production-shaped workflows
+
+TypeSafe’s current workflow evaluations make the state and the possible actions
+explicit. They are useful templates for systems that need several semantic
+readings followed by a deterministic playbook. The examples below are
+reference designs, not production-ready policies; validate them on your own
+data and keep high-impact actions behind approval.
+
+### Security incident response
+
+#### State
+
+Join the alert with the asset’s environment and owner, open tickets and change
+requests, registered devices, scheduled maintenance, and standing
+authorizations. This context lets the model distinguish an unexplained event
+from an authorized or already-known one.
+
+```python
+state = {
+    "alert": {"summary": "PowerShell accessed LSASS memory", "asset": "prod-win-17"},
+    "asset": {"environment": "production", "tier": "critical", "owner": "platform"},
+    "open_records": [],
+    "registered_devices": [],
+    "maintenance": [],
+    "authorizations": [],
+}
+
+questions = {
+    "unauthorized": Noul(
+        instructions="Is the activity in `alert` unauthorized given the attached records?",
+    ),
+    "explained_by_record": Noul(
+        instructions="Does an open record, maintenance window, or authorization explain the activity?",
+    ),
+    "evidence_strength": Score(
+        instructions="How strong is the evidence that this is a real security incident?",
+        criteria=["Weak or benign", "Ambiguous; analyst review needed", "Strong and actionable"],
+    ),
+    "asset_tier": Choice(
+        instructions="What is the operational importance of the affected asset?",
+        criteria={
+            "ordinary": "A non-critical asset with a recoverable impact.",
+            "critical": "A production or otherwise business-critical asset.",
+            "unknown": "The asset importance is not established.",
+        },
+    ),
+}
+```
+
+Code can close explained alerts, queue ambiguous alerts, and select a
+containment tier for a strong alert on a critical asset. If containment is
+selected, make a second call with questions about credentials, live sessions,
+processes, network traffic, and spread. The harness—not Jev—checks the
+authorization to kill a process, disable an account, or isolate a machine.
+
+Source: [Security Incidents workflow](https://evals.typesafe.ai/security_incidents).
+
+### Agent-trace observability
+
+#### State and questions
+
+Keep the complete trace available: the agent instructions, every conversation
+turn, tool arguments and results, the final response, and any customer
+feedback.
+
+```python
+questions = {
+    "permission_breach": Noul(
+        instructions="Did the agent take an irreversible action outside the permission it had at that point?",
+    ),
+    "task_completed": Noul(
+        instructions="Did the agent complete the customer’s requested task?",
+    ),
+    "user_satisfied": Noul(
+        instructions="Does the conversation or feedback indicate that the customer was satisfied?",
+    ),
+    "failure_kind": Choice(
+        instructions="If the run was not healthy, what best describes the outcome?",
+        criteria={
+            "expectation_gap": "The result is technically plausible but does not meet the user’s expectation.",
+            "overt_failure": "The agent visibly failed to complete the task or made an incorrect move.",
+            "silent_failure": "The agent appeared to finish, but the record shows the result was wrong or incomplete.",
+            "none": "No failure is evident.",
+        },
+    ),
+}
+```
+
+A permission breach should page on-call and end the review immediately. A
+healthy, successful run can auto-close; an expectation gap can enter a queue;
+an overt or silent failure can file an issue or route to a person. Preserve the
+raw trace and Jev probabilities so later reviewers can audit the decision.
+
+Source: [Agent Trace Observability workflow](https://evals.typesafe.ai/agent_trace_observability).
+
+### Invoice matching and payment controls
+
+#### State
+
+An invoice decision is rarely about the invoice alone. Include the invoice
+lines and bank details, purchase order, contract terms, vendor record, prior
+invoices, correspondence, delivery evidence, and approvals.
+
+```python
+questions = {
+    "is_invoice": Noul(instructions="Is the submitted document actually an invoice for this workflow?"),
+    "wrong_vendor": Noul(instructions="Does the invoice belong to a different vendor or legal entity than the records?"),
+    "duplicate": Noul(instructions="Does a prior invoice show that these goods or services were already billed or paid?"),
+    "fraud_signal": Noul(instructions="Are there semantic indicators that require fraud review?"),
+    "matches_order": Noul(instructions="Do the invoice items and quantities correspond to the purchase order and delivery evidence?"),
+    "needs_approval": Noul(instructions="Does the invoice still need an approval or signature before payment?"),
+    "payment_path": Choice(
+        instructions="What should happen next if no stop condition applies?",
+        criteria={
+            "pay": "The invoice is ready for payment.",
+            "schedule": "The invoice is valid but should be scheduled for a later payment date.",
+            "hold": "Hold it while missing documents or an approval are obtained.",
+            "dispute": "Dispute one or more lines with the vendor.",
+            "corrected_invoice": "Ask the vendor for a corrected invoice.",
+            "review": "Send it to a human reviewer.",
+        },
+    ),
+}
+```
+
+Compute totals, tax, dates, account numbers, and exact three-way-match
+quantities in code. Treat Jev’s answers as semantic evidence for the route;
+never turn a high probability directly into a payment API call. Stop early for
+fraud, duplicate payment, wrong entity, or a non-invoice document, then emit a
+reviewable action list.
+
+Source: [Invoice Processing workflow](https://evals.typesafe.ai/invoice_processing).
+
+### Multi-action customer service
+
+Customer support often needs several actions at once. Start with a fan-out
+over intent, frustration, urgency, unauthorized activity, legal threats,
+requests for a person, and the customer’s desired resolution. If the first
+reading selects a sensitive branch, attach the relevant pending proposal,
+ledger, card status, refund record, or subscription and ask follow-up
+questions. Finally, compare the assistant’s earlier claims with the account
+record before allowing actions such as “refund” or “freeze card.”
+
+```python
+def customer_actions(response) -> set[str]:
+    if response.answers["unauthorized_activity"].noul >= 0.8:
+        return {"freeze_card", "hand_off", "flag_for_review"}
+    if response.answers["legal_threat"].noul >= 0.7:
+        return {"hand_off", "flag_for_review"}
+    if response.answers["needs_person"].noul >= 0.7:
+        return {"hand_off"}
+    return code_owned_resolution(response)
+```
+
+The output is an action set, not a generated reply. A separate LLM may write a
+customer-facing message after the action policy has selected what is allowed.
+
+Source: [Customer Service workflow](https://evals.typesafe.ai/customer_service).
+
+### Abstention for claims and moderation
+
+Close probabilities can cause unstable automation. For claims, run independent
+`Noul`s for coverage, exclusions, missing documents, fraud indicators, and the
+need for manual review. For moderation, use `Choice` questions with an
+explicit `uncertain` route or a minimum top-probability threshold.
+
+```python
+def safe_route(probability: float, automatic: str, review: str = "human_review") -> str:
+    if probability >= 0.70:
+        return automatic
+    if probability <= 0.30:
+        return "no_action"
+    return review
+```
+
+The interval is an illustrative policy, not a universal calibration claim.
+Tune it on labeled cases, preserve the raw distributions, and measure both
+automatic coverage and false actions. Repeated-sample self-consistency can be
+used as an evaluation tool when you need to study stability near a threshold;
+it does not remove the need for a reviewer.
+
+Source: [Self-consistency for Nouls](https://docs.typesafe.ai/cookbooks/consistency_noul_cookbook), [self-consistency for Choices](https://docs.typesafe.ai/cookbooks/consistency_choice_cookbook), and [confidence](https://docs.typesafe.ai/confidence).
+
+### Bulk document review and map-reduce workflows
+
+For a long policy, regulation, or research corpus, use deterministic code to
+fetch, split, deduplicate, and aggregate documents. Ask the independent
+questions for one document in a single call, then combine the typed answers in
+code. This keeps the model focused on semantic judgments and makes the
+workflow easy to run over a large dataset.
+
+Source: [Parallel questions](https://docs.typesafe.ai/cookbooks/parallel_questions), [AI map-reduce over big data](https://docs.typesafe.ai/concepts/use-case-map), and [the TypeSafe launch post](https://typesafe.ai/blog/introducing-system-one-models-and-jev).
+
+### Real-time game-state control
+
+Games and interactive interfaces can expose a structured snapshot plus a
+closed set of legal actions. Jev can choose an action inside the tick while
+code remains responsible for collision checks, legality, deadlines, and
+fallback behavior.
+
+```python
+state = {
+    "player": {"x": 12, "y": 4, "health": 0.8},
+    "visible_targets": ["north_door", "healing_station"],
+    "legal_actions": ["move_north", "move_east", "wait"],
+    "facts": {
+        "move_north": "reaches the north door but enters an exposed corridor",
+        "move_east": "moves toward cover and remains near the healing station",
+        "wait": "keeps the current position for one tick",
+    },
+}
+
+questions = {
+    "action": Choice(
+        instructions="Which legal action best follows the strategy for this game state?",
+        criteria={action: state["facts"].get(action, "") for action in state["legal_actions"]},
+    ),
+}
+```
+
+If the response misses the tick deadline, use a deterministic fallback. For a
+large frontier, such as links in a navigation game, use a two-stage score then
+choice workflow when the option list is too large for one direct choice.
+
+Source: [TypeSafe’s launch examples for real-time applications, Doom, and Wikiracing](https://typesafe.ai/blog/introducing-system-one-models-and-jev) and the independent [Jev Snake implementation](https://github.com/sorrycc/typesafe-snake).
+
+### Verified extraction cascades
+
+When a small generative model is cheaper for first-pass extraction, use Jev as
+a field-level verifier. Ask whether each candidate is missing, unrelated, or
+unsupported by the source. Keep clean fields and escalate only failed fields
+to a larger reasoning model; parse, normalize, and validate the final values in
+code.
+
+Source: [SDE cascade](https://docs.typesafe.ai/cookbooks/sde_cascade), [pre-parsed value extraction](https://docs.typesafe.ai/cookbooks/pre_parsed_value_extraction_cookbook), and [date extraction](https://docs.typesafe.ai/cookbooks/date_extraction_cookbook).
+
+### Autoresearch for semantic features
+
+For labeled text, an outer research loop can propose Jev questions, evaluate
+them over every row, train a classical model on the resulting numeric features,
+inspect held-out errors, and propose the next question set. Keep the dataset
+split, feature table, and downstream model versioned just as you would for any
+other supervised learning workflow.
+
+Source: [Autoresearch feature discovery](https://docs.typesafe.ai/cookbooks/autoresearch_feature_discovery).
+
 ## Testing a Jev workflow
 
 Separate model evaluation from policy evaluation:

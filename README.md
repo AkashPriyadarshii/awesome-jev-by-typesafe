@@ -362,6 +362,120 @@ Use Jev to decide whether a turn needs a skill, tool, retrieval step, or expensi
 
 Evidence: [Agent skill](https://docs.typesafe.ai/agent-skill) and [skill-suggestion cookbook](https://docs.typesafe.ai/cookbooks/skill_suggestion).
 
+### Recent workflow evaluations and cookbook patterns
+
+The following additions come from TypeSafe’s current workflow evaluations and cookbooks. They are useful reference architectures, not guarantees that a model decision is correct. Keep arithmetic, authorization, thresholds, and side effects in code.
+
+#### 19. Security incident response
+
+Join an alert with asset context, open tickets, registered devices, maintenance windows, and standing authorizations. Ask whether the activity is unauthorized, whether an existing record explains it, and how strong the evidence is; then let a deterministic playbook choose close, queue, notify, or containment. Only ask deeper questions about credentials, sessions, processes, and spread after the first branch requires them.
+
+Source: [Security Incidents workflow](https://evals.typesafe.ai/security_incidents).
+
+#### 20. Agent-trace observability
+
+Review a completed agent run—including instructions, conversation, tool calls, final response, and feedback—for permission breaches, task completion, satisfaction, expectation gaps, and silent failures. Route the trace to auto-close, human review, bug filing, or on-call escalation.
+
+Source: [Agent Trace Observability workflow](https://evals.typesafe.ai/agent_trace_observability).
+
+#### 21. Invoice matching and payment controls
+
+Evaluate an invoice against its purchase order, contract, vendor record, prior invoices, correspondence, delivery evidence, and approvals. Use Jev for semantic checks such as duplicate/fraud/wrong-vendor signals and use code for totals, dates, account numbers, and payment execution. Emit actions such as pay, schedule, hold, dispute lines, request correction, or route for approval.
+
+Source: [Invoice Processing workflow](https://evals.typesafe.ai/invoice_processing).
+
+#### 22. Multi-action customer service
+
+Treat a support turn as a set of possible actions rather than a single intent label: say something, refund, freeze a card, set an intent, hand off, flag for review, or close. Fan out over intent, frustration, urgency, consent, fraud, legal risk, and requests for a person; then verify the assistant’s previous claims against account records before allowing a consequential action.
+
+Source: [Customer Service workflow](https://evals.typesafe.ai/customer_service).
+
+#### 23. Expense-claim approval
+
+Check receipt readability, classify the expense, compare meal claims with a policy threshold, and route only the exceptions for approval. Sums and other deterministic calculations belong in code; Jev supplies the semantic readings that select the next rule.
+
+Source: [Expense Claims example in the workflow evals](https://evals.typesafe.ai/).
+
+#### 24. Confidence-aware insurance claims triage
+
+Run a claims rubric as independent `Noul`s for coverage, exclusions, documentation, fraud indicators, review requirements, and related conditions. Preserve each probability and map a middle band to `uncertain`/human review rather than forcing pay or deny.
+
+Source: [Self-consistency for Nouls](https://docs.typesafe.ai/cookbooks/consistency_noul_cookbook) and [insurance claims on the use-case map](https://docs.typesafe.ai/concepts/use-case-map).
+
+#### 25. Abstaining content moderation
+
+Use `Choice` questions for labels such as threat, spam, and general content, with an explicit uncertain outcome or confidence gate. This lets a moderation system measure label stability and send borderline posts to review instead of turning close probabilities into automatic removals.
+
+Source: [Self-consistency for Choices](https://docs.typesafe.ai/cookbooks/consistency_choice_cookbook) and [moderation and trust & safety](https://docs.typesafe.ai/concepts/use-case-map).
+
+#### 26. Batched regulatory and policy review
+
+Ask many independent questions about one long document in one request—for example, whether a policy contains particular obligations, exceptions, or prohibited claims—then use code to assemble the briefing. This is a map-reduce-shaped workflow for document corpora: retrieve or split in code, evaluate in batches, aggregate deterministically.
+
+Source: [Parallel questions](https://docs.typesafe.ai/cookbooks/parallel_questions).
+
+#### 27. Structure recovery from messy text
+
+Recover headings, lists, code blocks, callouts, and paragraph boundaries from plain text that lost its formatting. Use one pass to reconnect hard-wrapped lines and a second typed classification pass for blocks; keep the final Markdown renderer deterministic.
+
+Source: [Structure recovery](https://docs.typesafe.ai/cookbooks/autoformat.md).
+
+#### 28. Verified structured-data extraction cascades
+
+Have a small generative model extract candidate fields, use Jev `Noul`s to check whether each value is missing, unrelated, or unsupported by the source, and escalate only failed fields to a larger reasoning model. This is useful for invoices, claims, applications, and forms where extraction quality matters more than free-form prose.
+
+Source: [SDE cascade](https://docs.typesafe.ai/cookbooks/sde_cascade).
+
+#### 29. Autoresearch for semantic ML features
+
+Let a research loop propose Jev questions, turn free text into numeric `Score`/`Noul` features, train a downstream supervised model, inspect held-out errors, and propose the next questions. The feature table, validation split, and final model stay under ordinary ML tooling.
+
+Source: [Autoresearch feature discovery](https://docs.typesafe.ai/cookbooks/autoresearch_feature_discovery).
+
+#### 30. Confidence-aware hierarchical classification
+
+Classify a document into a fine-grained taxonomy, then use the returned confidence to decide whether to report the narrow label, roll up to a parent category, or ask for review. This avoids a second model call when the taxonomy already provides a safe fallback.
+
+Source: [Classification using confidence](https://docs.typesafe.ai/cookbooks/classification_using_confidence).
+
+#### 31. Real-time game-state and high-cardinality control
+
+When a program can describe the current state and legal actions, Jev can make a fast decision inside the loop: choose a move from a generated action set, or choose the next link from a large frontier such as a Wikiracing page. Keep collision checks, legal-action generation, game rules, deadlines, and fallback actions in code.
+
+Source: [TypeSafe’s launch examples for real-time applications, Doom, and Wikiracing](https://typesafe.ai/blog/introducing-system-one-models-and-jev).
+
+### Additional industry use cases from the current TypeSafe map
+
+These are additional domains explicitly listed in the official use-case map. Each is a good candidate for a small state object, atomic questions, and a code-owned review branch.
+
+| Domain | Example Jev workflow | Source |
+|---|---|---|
+| Scientific discovery | Screen papers, label themes in qualitative research, check manuscript citations, and link entities to evidence. | [Example use-case map](https://docs.typesafe.ai/concepts/use-case-map) |
+| Recruiting | Evaluate job-related evidence, match candidates to roles, route applications, and escalate uncertain cases. | [Example use-case map](https://docs.typesafe.ai/concepts/use-case-map) |
+| Lead generation | Score ICP fit, buyer relevance, pain points, and purchase intent before routing leads. | [Example use-case map](https://docs.typesafe.ai/concepts/use-case-map) |
+| Insurance claims | Classify first-notice-of-loss records, detect missing information and fraud indicators, and prioritize adjuster review. | [Example use-case map](https://docs.typesafe.ai/concepts/use-case-map) |
+| Financial crime | Evaluate transaction narratives, KYC material, and alert histories; match entities and prioritize investigator queues. | [Example use-case map](https://docs.typesafe.ai/concepts/use-case-map) |
+| Legal and compliance | Find missing clauses, prohibited claims, and policy violations in contracts, filings, and marketing material. | [Example use-case map](https://docs.typesafe.ai/concepts/use-case-map) |
+| E-commerce marketplaces | Normalize listings, extract product attributes, detect counterfeit or prohibited-listing signals, and route exceptions. | [Example use-case map](https://docs.typesafe.ai/concepts/use-case-map) |
+| Moderation and trust & safety | Apply organization-specific criteria to toxicity, harassment, spam, fraud, unsafe advice, and personal-data exposure. | [Example use-case map](https://docs.typesafe.ai/concepts/use-case-map) |
+| Advertising | Check brand safety, audience suitability, regulatory claims, creative quality, and ad-to-landing-page alignment. | [Example use-case map](https://docs.typesafe.ai/concepts/use-case-map) |
+| Gaming | Moderate chat, score engagement or frustration, detect abuse and churn signals, and route player support. | [Example use-case map](https://docs.typesafe.ai/concepts/use-case-map) |
+| Risk assessment | Turn incident reports, claims, transaction descriptions, and vendor assessments into probabilistic risk features. | [Example use-case map](https://docs.typesafe.ai/concepts/use-case-map) |
+| Demand forecasting | Extract purchase intent, urgency, product interest, supply concerns, and competitive pressure for a time-series model. | [Example use-case map](https://docs.typesafe.ai/concepts/use-case-map) |
+| Knowledge graphs | Classify entity types and relationships, detect contradictions, and support probabilistic traversal. | [Example use-case map](https://docs.typesafe.ai/concepts/use-case-map) |
+
+### Recent independent implementations
+
+These are community projects, not TypeSafe endorsements. They show how the same decision-layer interface is being used outside the official examples; treat demos, dry runs, and financial or home-automation integrations as experiments that require your own safety controls.
+
+| Implementation | Use case | Source |
+|---|---|---|
+| Jev plays Snake | Real-time game control: code generates legal moves and exact state facts, while Jev chooses one move per tick. | [typesafe-snake](https://github.com/sorrycc/typesafe-snake) |
+| Home Assistant Jev | Expose `Noul`, `Choice`, and `Score` answers as automation entities and actions for household workflows. | [HA-Jev](https://github.com/AboveColin/HA-Jev) |
+| Jev MCP server | Give coding agents typed claim verification, content screening, and semantic ranking tools. | [jev-mcp](https://github.com/jkudish/jev-mcp) |
+| Jev logs | Annotate OpenTelemetry/log records with Jev decisions and optionally skip expensive analysis for low-value traces. | [jevlogs](https://github.com/reachjalil/jevlogs) |
+| Jev trader | Experimental sub-second market-side decision loop; the project documents a default dry-run and a separate live-trading path. | [jev-trader](https://github.com/jarrodwatts/jev-trader) |
+
 ## A production-shaped decision loop
 
 ```text
@@ -454,6 +568,7 @@ The intended GitHub description and topic set are recorded in [`docs/repository-
 - [Confidence](https://docs.typesafe.ai/confidence)
 - [Patterns](https://docs.typesafe.ai/patterns)
 - [Example use cases](https://docs.typesafe.ai/concepts/use-case-map)
+- [Workflow evaluations](https://evals.typesafe.ai/)
 - [Quick start](https://docs.typesafe.ai/introduction/quickstart)
 - [Official Python SDK](https://github.com/typesafe-ai/typesafe-sdk-python)
 - [Official JavaScript SDK](https://github.com/typesafe-ai/typesafe-sdk-js)
