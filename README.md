@@ -480,6 +480,7 @@ These are community projects, not TypeSafe endorsements. They show how the same 
 | Jev logs | Annotate OpenTelemetry/log records with Jev decisions and optionally skip expensive analysis for low-value traces. | [jevlogs](https://github.com/reachjalil/jevlogs) |
 | Jev trader | Experimental sub-second market-side decision loop; the project documents a default dry-run and a separate live-trading path. | [jev-trader](https://github.com/jarrodwatts/jev-trader) |
 | jev-curate | High-throughput synthetic dataset sifter in Rust: evaluates JSONL and Parquet rows via Jev Noul checks and streams clean/rejected rows to disk. | [jev-curate](https://github.com/AkashPriyadarshii/jev-curate) |
+| jevcal | Threshold calibration: runs your labeled rows through `Noul` / `Choice` / `Score` questions, fits a per-question confidence threshold to a target accuracy on one split, verifies it on a held-out split, and writes a lock file; application code owns the target, the fallback model, and a CI drift check for when the model alias moves. | [jevcal](https://github.com/abhixhek/jevcal) |
 
 Have a project that belongs here? See [Adding your implementation](#adding-your-implementation) below.
 
