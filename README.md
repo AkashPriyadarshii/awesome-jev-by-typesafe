@@ -284,6 +284,8 @@ Use BM25 or embeddings to create a shortlist, then score each query–candidate 
 
 Evidence: [Re-ranking cookbook](https://docs.typesafe.ai/cookbooks/rerank_typesafe) and [line-by-line search](https://docs.typesafe.ai/cookbooks/semantic_find).
 
+Community implementation: [Jev Search](https://github.com/superagents-lab/jev-search) uses the user's request and retrieved titles and snippets as state, asks Jev `Noul` questions about each result's relevance, then uses application code to deduplicate URLs, sort results, and group lower-scoring matches separately. It also uses `Choice` and `Noul` judgments to select query candidates, time ranges, and sources before retrieval through Search1API; the [live demo](https://jev.s1.dev) displays links and snippets with relevance scores, which are model judgments rather than verified accuracy. This is an independent Search1API project, not an official TypeSafe product.
+
 #### 7. Citation and claim verification
 
 Compare a claim, its cited passage, and the source document. Ask whether the passage supports, contradicts, or fails to establish the claim, and route low-confidence results to review.
