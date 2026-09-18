@@ -1,7 +1,5 @@
 <div align="center">
 
-<a href="https://docs.typesafe.ai/introduction"><img src="images/banner.svg" alt="Awesome Jev by TypeSafe: typed decisions for software" width="760"></a>
-
 [![License: MIT](https://img.shields.io/badge/License-MIT-lightgrey.svg)](LICENSE)
 [![Jev](https://img.shields.io/badge/TypeSafe-Jev-0d9488)](https://typesafe.ai/blog/introducing-system-one-models-and-jev)
 [![API docs](https://img.shields.io/badge/API-Docs-0f766e)](https://docs.typesafe.ai/api)
@@ -11,6 +9,9 @@
 </div>
 
 # Awesome Jev by TypeSafe
+
+<p align="center"><a href="https://youtu.be/BOn4OMC8O9c"><img src="https://i.ytimg.com/vi/BOn4OMC8O9c/maxresdefault.jpg" width="720"></a></p>
+<p align="center"><a href="https://youtu.be/BOn4OMC8O9c"><b>▶ Watch: Jev: 8 Wild Things People Already Built With TypeSafe's New AI Model </b></a></p>
 
 An evidence-backed, practical collection of use cases, patterns, prompts, and starter code for **Jev**, TypeSafe AI’s first **System One Model**.
 
