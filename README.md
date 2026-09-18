@@ -364,6 +364,8 @@ Use Jev to decide whether a turn needs a skill, tool, retrieval step, or expensi
 
 Evidence: [Agent skill](https://docs.typesafe.ai/agent-skill) and [skill-suggestion cookbook](https://docs.typesafe.ai/cookbooks/skill_suggestion).
 
+Community implementation: [Augustus](https://github.com/24601/Augustus) takes the desired software behavior as state, decomposes it into typed `Choice`, `Score`, and `Noul` questions about where semantic judgment belongs, and keeps thresholds, composition, and side effects in application code. It ships a decision-design card and requires a smallest falsifying experiment before a design is treated as settled. Independent agent skill, not an official TypeSafe product.
+
 ### Recent workflow evaluations and cookbook patterns
 
 The following additions come from TypeSafe’s current workflow evaluations and cookbooks. They are useful reference architectures, not guarantees that a model decision is correct. Keep arithmetic, authorization, thresholds, and side effects in code.
@@ -479,6 +481,8 @@ These are community projects, not TypeSafe endorsements. They show how the same 
 | Jev trader | Experimental sub-second market-side decision loop; the project documents a default dry-run and a separate live-trading path. | [jev-trader](https://github.com/jarrodwatts/jev-trader) |
 | jev-curate | High-throughput synthetic dataset sifter in Rust: evaluates JSONL and Parquet rows via Jev Noul checks and streams clean/rejected rows to disk. | [jev-curate](https://github.com/AkashPriyadarshii/jev-curate) |
 
+Have a project that belongs here? See [Adding your implementation](#adding-your-implementation) below.
+
 ## A production-shaped decision loop
 
 ```text
@@ -586,6 +590,19 @@ Useful contributions are small, reproducible, and honest about uncertainty:
 - report model version, date, thresholds, and evaluation set for performance claims;
 - separate TypeSafe-reported results from your own measurements;
 - avoid putting credentials, private customer data, or irreversible actions in examples.
+
+### Adding your implementation
+
+Built something on Jev? Open a PR that adds one row to the [Recent independent implementations](#recent-independent-implementations) table (or a short "Community implementation" note under the closest matching use case if a table row doesn't fit). To get merged quickly:
+
+1. **Keep the diff small.** One row or one short paragraph, in the closest matching section. Don't reformat unrelated content in the same PR.
+2. **Name it, don't sell it.** One sentence on what state it evaluates, what typed questions it asks (`Choice` / `Score` / `Noul`), and where application code owns policy, thresholds, or side effects.
+3. **Disclose affiliation.** Say in the PR description if you built or maintain the project. That's fine — this list is for independent implementations, not just third-party ones — but it must be stated.
+4. **Link to evidence.** A public repo, and ideally the specific file(s) that call the Jev API, so reviewers can verify the claim without trusting the description.
+5. **Make it inspectable.** Public source, a license, and a README that explains setup and any data sent to providers. No closed demos as the only evidence.
+6. **Don't overclaim.** No unverified performance/benchmark numbers. Mark experimental or dry-run-only paths (e.g., trading, financial, or home-automation actions) explicitly.
+
+Listing here is not a TypeSafe endorsement — see the disclaimer above the table.
 
 ## License
 
