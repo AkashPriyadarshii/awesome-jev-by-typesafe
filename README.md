@@ -1,7 +1,5 @@
 <div align="center">
 
-<a href="https://docs.typesafe.ai/introduction"><img src="images/banner.svg" alt="Awesome Jev by TypeSafe: typed decisions for software" width="760"></a>
-
 [![License: MIT](https://img.shields.io/badge/License-MIT-lightgrey.svg)](LICENSE)
 [![Jev](https://img.shields.io/badge/TypeSafe-Jev-0d9488)](https://typesafe.ai/blog/introducing-system-one-models-and-jev)
 [![API docs](https://img.shields.io/badge/API-Docs-0f766e)](https://docs.typesafe.ai/api)
@@ -11,6 +9,9 @@
 </div>
 
 # Awesome Jev by TypeSafe
+
+<p align="center"><a href="https://youtu.be/BOn4OMC8O9c"><img src="https://i.ytimg.com/vi/BOn4OMC8O9c/maxresdefault.jpg" width="720"></a></p>
+<p align="center"><a href="https://youtu.be/BOn4OMC8O9c"><b>▶ Watch: Jev: 8 Wild Things People Already Built With TypeSafe's New AI Model </b></a></p>
 
 An evidence-backed, practical collection of use cases, patterns, prompts, and starter code for **Jev**, TypeSafe AI’s first **System One Model**.
 
@@ -481,6 +482,8 @@ These are community projects, not TypeSafe endorsements. They show how the same 
 | Jev trader | Experimental sub-second market-side decision loop; the project documents a default dry-run and a separate live-trading path. | [jev-trader](https://github.com/jarrodwatts/jev-trader) |
 | jev-curate | High-throughput synthetic dataset sifter in Rust: evaluates JSONL and Parquet rows via Jev Noul checks and streams clean/rejected rows to disk. | [jev-curate](https://github.com/AkashPriyadarshii/jev-curate) |
 | jevcal | Threshold calibration: runs your labeled rows through `Noul` / `Choice` / `Score` questions, fits a per-question confidence threshold to a target accuracy on one split, verifies it on a held-out split, and writes a lock file; application code owns the target, the fallback model, and a CI drift check for when the model alias moves. | [jevcal](https://github.com/abhixhek/jevcal) |
+| Janus | Calibration measurement and confidence-based routing, packaged as an installable tool (`pip install janus-decide`): one `Choice` per labelled example over the full class list, with application code owning the threshold sweep, the escalation to a fallback model, and per-row cost accounting; it also measures a log of decisions already taken against a reference model, and reports agreement rather than correctness because such a log carries no ground truth. Raw JSONL and figures are committed. | [Janus](https://github.com/FirasSX914/Janus) |
+| jevql | Semantic SQL over an unmodified Postgres: the plain SQL runs on the server, then Jev answers `Noul`, `Choice`, and `Score` questions about each surviving row so the client can apply `jev()` filters, `jev_prob` sorts, and `jev_choice` groups; batching, caching, and thresholds stay in code. | [jevql](https://github.com/kylemclaren/jevql) |
 
 Have a project that belongs here? See [Adding your implementation](#adding-your-implementation) below.
 
